@@ -1,13 +1,7 @@
-from functions.get_files_into import get_files_info
+from functions.write_file import write_file
 
-print("Result for current directory:")
-print(get_files_info("calculator", "."))
+print(write_file("calculator", "lorem.txt", "wait, this isn't lorem ipsum"))
 print('')
-print("Result for 'pkg' directory:")
-print(get_files_info("calculator", "pkg"))
+print(write_file("calculator", "pkg/morelorem.txt", "lorem ipsum dolor sit amet"))
 print('')
-print("Result for '/bin' directory:")
-print(get_files_info("calculator", "/bin"))
-print('')
-print("Result for '../' directory:")
-print(get_files_info("calculator","../"))
+print(write_file("calculator", "/tmp/temp.txt", "this should not be allowed"))
