@@ -1,5 +1,7 @@
 from functions.config import MAX_CHARS
 import os
+from google import genai
+from google.genai import types
 
 def get_file_content(working_directory, file_path):
     try:
@@ -20,3 +22,17 @@ def get_file_content(working_directory, file_path):
     
     except Exception as e:
         return f'Error: {e}'
+    
+schema_get_file_content = types.FunctionDeclaration(
+    name="get_file_content",
+    description="Returns the contents of the specified file to a maximum of 10000 characters, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The file to read, relative to the working directory.",
+            ),
+        },
+    ),
+)
