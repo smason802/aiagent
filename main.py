@@ -5,7 +5,7 @@ from google.genai import types
 import sys
 
 from functions.call_function import call_function, available_functions
-from config import system_prompt
+from config import system_prompt, MAX_ITERATIONS
 
 
 def main():
@@ -35,17 +35,21 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
 
-    for i in range(20):
+    iters = 0
+    while True:
+        iters += 1
+        if iters > MAX_ITERATIONS:
+            print(f"Maximum iterations ({MAX_ITERATIONS}) reached.")
+            sys.exit(1)
+
         try:
-            function_responses = generate_content(client, messages, verbose)
-        except:
-            raise Exception("Fatal Error generating content")
-        
-        if function_responses is str:
-            print(function_responses)
-            break
-        
-        messages.extend(types.Content(role="user", parts=[types.Part(text=function_responses)])),
+            final_response = generate_content(client, messages, verbose)
+            if final_response:
+                print("Final response:")
+                print(final_response)
+                break
+        except Exception as e:
+            print(f"Error in generate_content: {e}")
 
 
 def generate_content(client, messages, verbose):
@@ -57,13 +61,15 @@ def generate_content(client, messages, verbose):
         )
     )
 
-    for candidate in responses.candidates:
-        messages.append(candidate.content)
-
     if verbose:
         print("Prompt tokens:", response.usage_metadata.prompt_token_count)
         print("Response tokens:", response.usage_metadata.candidates_token_count)
    
+    if response.candidates:
+        for candidate in response.candidates:
+            function_call_content = candidate.content
+            messages.append(function_call_content)
+
     if not response.function_calls:
         return response.text
     
@@ -78,12 +84,11 @@ def generate_content(client, messages, verbose):
         if verbose:
             print(f"-> {function_call_result.parts[0].function_response.response}")
         function_responses.append(function_call_result.parts[0])
-
+    
     if not function_responses:
         raise Exception("no function responses generated, exiting.")
-
-    return function_responses
-
+    
+    messages.append(types.Content(role="user", parts=function_responses))
 
 if __name__ == "__main__":
     main()
